@@ -1,0 +1,13 @@
+[
+  {
+    "id": "hani-hairstyle",
+    "name": "Hani Hairstyle",
+    "tagline": "Friseur Neu-Ulm — Glacis Galerie",
+    "description": "One-Page-Website für den Friseursalon: Services & Preise, Galerie, Bewertungen, Standort. Entworfen als Vorlage zur Abstimmung mit dem Salon-Besitzer.",
+    "thumbnail": "sites/hani-hairstyle/assets/img/hero-salon.jpg",
+    "url": "sites/hani-hairstyle/index.html",
+    "status": "entwurf",
+    "stack": ["HTML", "CSS", "JS"],
+    "date": "2026-07"
+  }
+]
