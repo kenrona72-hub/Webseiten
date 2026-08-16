@@ -1,3 +1,4 @@
+# Retrigger: fresh clean run for log diagnosis (2026-08-16)
 name: Deploy Kens Webspace to GitHub Pages
 
 on:
