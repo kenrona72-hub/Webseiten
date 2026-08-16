@@ -5,6 +5,8 @@ on:
     branches:
       - claude/honey-hairstyle-website-vqf6bj
       - main
+  # workflow_dispatch only registers once this file is on the default
+  # branch; until then, retrigger via a push to one of the branches above.
   workflow_dispatch:
 
 permissions:
