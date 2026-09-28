@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#3b1e33" />
+    <meta
+      name="description"
+      content="DEQO Events – Konzeptvorschau: Locations und Eventdienstleister an einem Ort finden, vergleichen und anfragen."
+    />
+    <title>DEQO Events – Anbieter finden für euren Tag</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#finden">Direkt zur Anbietersuche</a>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="DEQO Events Startseite">
+        <span class="brand-mark" aria-hidden="true">◇</span>
+        <span>DEQO <em>Events</em></span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="Hauptnavigation">
+        <a href="#finden">Anbieter finden</a>
+        <a href="#ablauf">So läuft es</a>
+        <a href="#complete">DEQO Complete</a>
+        <a href="#anbieter">Für Anbieter</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="icon-button favorite-counter" id="favoritesButton" aria-label="Gespeicherte Favoriten anzeigen">
+          <span aria-hidden="true">♡</span> <span id="favoriteCount">0</span>
+        </button>
+        <a class="button button-ghost provider-entry" href="#anbieter">Ich bin Anbieter</a>
+        <button class="menu-button" id="menuButton" aria-label="Menü öffnen" aria-expanded="false" aria-controls="mobileNav">☰</button>
+      </div>
+    </header>
+
+    <nav class="mobile-nav" id="mobileNav" aria-label="Mobile Navigation">
+      <a href="#finden">Anbieter finden</a>
+      <a href="#ablauf">So läuft es</a>
+      <a href="#complete">DEQO Complete</a>
+      <a href="#anbieter">Für Anbieter</a>
+    </nav>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="heroTitle">
+        <div class="hero-shade" aria-hidden="true"></div>
+        <div class="hero-content">
+          <p class="demo-flag">Konzeptvorschau mit Beispieldaten</p>
+          <h1 id="heroTitle">Anbieter für euren Tag.<br /><em>An einem Ort gefunden.</em></h1>
+          <p class="hero-copy">
+            Ort eingeben, Bereich wählen, passende Anbieter vergleichen und in wenigen
+            Schritten anfragen. Ohne zehn offene Tabs.
+          </p>
+
+          <form class="hero-search" id="heroSearch" novalidate>
+            <label class="field">
+              <span class="field-label">Wo feiert ihr?</span>
+              <span class="field-control">
+                <b aria-hidden="true">⌖</b>
+                <input id="heroLocation" name="ort" type="text" autocomplete="address-level2" value="Stuttgart" placeholder="Stadt eingeben" />
+              </span>
+            </label>
+            <label class="field">
+              <span class="field-label">Was sucht ihr?</span>
+              <select id="heroCategory"></select>
+            </label>
+            <label class="field">
+              <span class="field-label">Umkreis</span>
+              <select id="heroRadius">
+                <option value="25">25 km</option>
+                <option value="50" selected>50 km</option>
+                <option value="75">75 km</option>
+                <option value="100">100 km</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field-label">Gäste</span>
+              <select id="heroGuests">
+                <option value="0">egal</option>
+                <option value="100">ab 100</option>
+                <option value="250">ab 250</option>
+                <option value="300" selected>ab 300</option>
+                <option value="500">ab 500</option>
+              </select>
+            </label>
+            <button class="button button-primary search-submit" type="submit">Anbieter finden</button>
+          </form>
+
+          <p class="hero-secondary">
+            Ihr seid Location oder Dienstleister?
+            <a href="#anbieter">Als Anbieter sichtbar werden</a>
+          </p>
+        </div>
+      </section>
+
+      <section class="trust-strip" aria-label="Was diese Vorschau zeigt">
+        <ul>
+          <li><strong>Kuratierte Auswahl</strong><span>Jedes Profil wird vor der Freischaltung geprüft.</span></li>
+          <li><strong>Vergleichbare Angaben</strong><span>Kapazität, Bereich und Preisrahmen stehen bei jedem Profil.</span></li>
+          <li><strong>Anfrage in drei Schritten</strong><span>Auswählen, Eckdaten eintragen, abschicken.</span></li>
+          <li><strong>Persönliche Begleitung</strong><span>Auf Wunsch übernimmt DEQO die Koordination.</span></li>
+        </ul>
+      </section>
+
+      <section class="search-section" id="finden">
+        <div class="search-top section">
+          <div class="section-heading align-left">
+            <p class="eyebrow">Ergebnisse</p>
+            <h2 id="resultsTitle">Locations rund um Stuttgart</h2>
+            <p id="searchSummary">5 Demo-Profile · 50 km · ab 300 Personen</p>
+          </div>
+
+          <div class="demo-note">
+            <span>Demo-Daten</span>
+            <p>Namen, Bilder, Preise und Bewertungen sind Beispielwerte für diese Vorschau. Keine echten Anbieter, keine echten Rezensionen.</p>
+          </div>
+
+          <div class="category-rail" id="categoryRail" role="group" aria-label="Bereich wählen"></div>
+
+          <div class="filter-bar" aria-label="Suchfilter">
+            <label class="field">
+              <span class="field-label">Ort</span>
+              <span class="field-control"><b aria-hidden="true">⌖</b><input id="locationFilter" type="text" autocomplete="address-level2" /></span>
+            </label>
+            <label class="field">
+              <span class="field-label">Kategorie</span>
+              <select id="categoryFilter"></select>
+            </label>
+            <label class="field">
+              <span class="field-label">Umkreis</span>
+              <select id="radiusFilter">
+                <option value="25">25 km</option><option value="50" selected>50 km</option><option value="75">75 km</option><option value="100">100 km</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field-label">Bewertung</span>
+              <select id="ratingFilter">
+                <option value="0">alle</option>
+                <option value="3">ab 3 Sternen</option>
+                <option value="4" selected>ab 4 Sternen</option>
+                <option value="4.8">ab 4,8 Sternen</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field-label">Sortierung</span>
+              <select id="sortFilter">
+                <option value="rating">Beste Bewertung</option>
+                <option value="price">Günstigster Preis</option>
+                <option value="distance">Kürzeste Entfernung</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="active-filters" id="activeFilters" aria-label="Aktive Filter"></div>
+        </div>
+
+        <div class="section results-layout">
+          <aside class="filter-aside" aria-label="Weitere Filter">
+            <div>
+              <span class="filter-label">Personenzahl</span>
+              <div class="chip-row" id="guestChips">
+                <button type="button" class="filter-chip" data-guests="0">egal</button>
+                <button type="button" class="filter-chip" data-guests="100">ab 100</button>
+                <button type="button" class="filter-chip" data-guests="250">ab 250</button>
+                <button type="button" class="filter-chip active" data-guests="300">ab 300</button>
+                <button type="button" class="filter-chip" data-guests="500">ab 500</button>
+              </div>
+            </div>
+            <div>
+              <span class="filter-label">Budgetrahmen</span>
+              <label class="range-row">
+                <input type="range" id="priceRange" min="500" max="5000" step="100" value="5000" />
+                <output id="priceOutput">bis 5.000 €</output>
+              </label>
+            </div>
+            <div>
+              <span class="filter-label">Ausstattung</span>
+              <label class="check-row"><input type="checkbox" data-feature="innen" /> Innenbereich</label>
+              <label class="check-row"><input type="checkbox" data-feature="aussen" /> Außenbereich</label>
+              <label class="check-row"><input type="checkbox" data-feature="barrierefrei" /> Barrierefrei</label>
+              <label class="check-row"><input type="checkbox" data-feature="parkplatz" /> Parkplätze</label>
+            </div>
+            <button type="button" class="text-button" id="resetFilters">Alle Filter zurücksetzen</button>
+          </aside>
+
+          <div class="provider-list" id="providerList" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="journey" id="ablauf" aria-labelledby="journeyTitle">
+        <div class="journey-head">
+          <div>
+            <p class="eyebrow">In drei Schritten</p>
+            <h2 id="journeyTitle">So kommt ihr zur Anfrage</h2>
+          </div>
+          <div class="journey-controls">
+            <button type="button" class="round-button" id="journeyPrev" aria-label="Vorheriger Schritt">←</button>
+            <button type="button" class="round-button" id="journeyNext" aria-label="Nächster Schritt">→</button>
+          </div>
+        </div>
+
+        <div class="journey-track" id="journeyTrack" tabindex="0" aria-label="Schritte, horizontal scrollbar">
+          <article class="journey-card" id="journey-1">
+            <span class="journey-step">01</span>
+            <h3>Wünsche</h3>
+            <p>Ort, Bereich, Umkreis und Gästezahl eingeben. Die Ergebnisliste passt sich sofort an.</p>
+            <a class="text-button" href="#finden">Zur Suche</a>
+          </article>
+          <article class="journey-card" id="journey-2">
+            <span class="journey-step">02</span>
+            <h3>Anbieter</h3>
+            <p>Profile vergleichen, Favoriten merken, Details öffnen. Alle Eckdaten stehen an derselben Stelle.</p>
+            <a class="text-button" href="#finden">Profile ansehen</a>
+          </article>
+          <article class="journey-card" id="journey-3">
+            <span class="journey-step">03</span>
+            <h3>DEQO Complete</h3>
+            <p>Keine Lust auf Koordination? DEQO übernimmt Auswahl, Abstimmung und Umsetzung persönlich.</p>
+            <a class="text-button" href="#complete">Complete ansehen</a>
+          </article>
+        </div>
+        <div class="journey-dots" id="journeyDots" role="tablist" aria-label="Schritt wählen"></div>
+      </section>
+
+      <section class="complete-section" id="complete">
+        <div class="complete-image" role="img" aria-label="Festlich gedeckte Tafel, Beispielbild"></div>
+        <div class="complete-copy">
+          <p class="eyebrow light">DEQO Complete</p>
+          <h2>Ihr träumt.<br /><em>DEQO organisiert.</em></h2>
+          <p>
+            Keine Zeit, alles selbst zu koordinieren? DEQO begleitet Auswahl, Abstimmung
+            und Umsetzung persönlich.
+          </p>
+          <ul>
+            <li><span>01</span> Erstgespräch zu Datum, Rahmen und Budget</li>
+            <li><span>02</span> Passende Anbieter aus einer Hand</li>
+            <li><span>03</span> Koordination bis zum großen Tag</li>
+          </ul>
+          <button type="button" class="button button-light" data-open-request="complete">Kostenloses Erstgespräch vormerken</button>
+        </div>
+      </section>
+
+      <section class="section provider-section" id="anbieter">
+        <div class="section-heading">
+          <p class="eyebrow">Für Locations und Dienstleister</p>
+          <h2>Sichtbar werden, wo Paare gerade planen</h2>
+          <p>Anfragen statt Klicks: Eure Eckdaten stehen dort, wo die Entscheidung fällt.</p>
+        </div>
+
+        <div class="provider-benefits">
+          <article>
+            <span aria-hidden="true">◇</span>
+            <h3>Qualifizierte Anfragen</h3>
+            <p>Datum, Ort und Gästezahl kommen mit der Anfrage. Keine leeren Rückfragen.</p>
+          </article>
+          <article>
+            <span aria-hidden="true">◇</span>
+            <h3>Profil statt Preisliste</h3>
+            <p>Bilder, Kapazität, Ausstattung und Stil in einer vergleichbaren Struktur.</p>
+          </article>
+          <article>
+            <span aria-hidden="true">◇</span>
+            <h3>Regionale Sichtbarkeit</h3>
+            <p>Eure Region, eure Kategorie. Vorbereitet für spätere Orts- und Kategorieseiten.</p>
+          </article>
+        </div>
+
+        <div class="profile-preview">
+          <div class="profile-preview-visual" role="img" aria-label="Beispielbild eines Anbieterprofils"></div>
+          <div class="profile-preview-copy">
+            <p class="eyebrow">So sieht euer Profil aus</p>
+            <h3>Maison d’Amour</h3>
+            <p class="preview-meta">Location · Demo-Profil · 300 bis 650 Personen</p>
+            <ul>
+              <li>Bildergalerie und Beschreibung</li>
+              <li>Kapazität, Bereich und Preisrahmen</li>
+              <li>Direkter Anfrage-Button</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="pricing-grid">
+          <article class="price-card">
+            <p class="plan-name">Basic</p>
+            <h3>29 €<small>/ Monat</small></h3>
+            <ul><li>Profil mit bis zu 10 Bildern</li><li>Anfragen per E-Mail</li><li>Eintrag in einer Kategorie</li></ul>
+          </article>
+          <article class="price-card featured">
+            <span class="popular-badge">Meist gewählt im Konzept</span>
+            <p class="plan-name">Premium</p>
+            <h3>59 €<small>/ Monat</small></h3>
+            <ul><li>Bevorzugte Platzierung</li><li>Bis zu 25 Bilder</li><li>Auswertung der Anfragen</li></ul>
+          </article>
+          <article class="price-card">
+            <p class="plan-name">Premium Plus</p>
+            <h3>99 €<small>/ Monat</small></h3>
+            <ul><li>Top-Platzierung</li><li>Video und bis zu 50 Bilder</li><li>Persönlicher Ansprechpartner</li></ul>
+          </article>
+        </div>
+        <p class="pricing-note">Konzeptpreise für die Vorschau. Noch keine buchbaren Tarife, keine Vertragsbindung.</p>
+
+        <div class="provider-cta">
+          <button type="button" class="button button-primary" data-open-request="anbieter">Anbieter-Erstgespräch vormerken</button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">◇</span><span>DEQO <em>Events</em></span></a>
+      <p>Konzeptdemo · Beispieldaten · Bildmaterial: Unsplash</p>
+      <div><a href="#finden">Anbieter finden</a><a href="#anbieter">Für Anbieter</a></div>
+    </footer>
+
+    <dialog class="provider-dialog" id="providerDialog" aria-label="Anbieterdetails">
+      <button type="button" class="dialog-close" id="closeDialog" aria-label="Detailansicht schließen">×</button>
+      <div id="dialogContent"></div>
+    </dialog>
+
+    <dialog class="request-dialog" id="requestDialog" aria-labelledby="requestTitle">
+      <button type="button" class="dialog-close dark" id="closeRequest" aria-label="Anfrage schließen">×</button>
+      <div id="requestContent"></div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
