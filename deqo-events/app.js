@@ -156,6 +156,7 @@ const state = {
   minRating: 4,
   maxPrice: 5000,
   sort: "rating",
+  nurFavoriten: false,
   features: new Set(),
   favorites: new Set(gespeicherteFavoriten)
 };
@@ -167,7 +168,44 @@ const requestDialog = el("requestDialog");
 const toast = el("toast");
 let letzterFokus = null;
 
-const PREIS = neu => neu.toLocaleString("de-DE");
+const PREIS = wert => wert.toLocaleString("de-DE");
+
+/* Eingaben und URL-Werte nie ungeprueft in HTML schreiben */
+const ZEICHEN = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+const sicher = text => String(text).replace(/[&<>"']/g, z => ZEICHEN[z]);
+
+/* ---------------------------------------------------------------
+   Zustand in der URL, damit eine vorbereitete Ansicht teilbar ist
+   Beispiel: index.html?ort=Ulm&kategorie=Fotografie&umkreis=75&gaeste=250
+----------------------------------------------------------------- */
+const ERLAUBT = {
+  umkreis: ["25", "50", "75", "100"],
+  gaeste: ["0", "100", "250", "300", "500"]
+};
+
+function leseUrlZustand() {
+  let p;
+  try { p = new URLSearchParams(window.location.search); } catch (fehler) { return; }
+  const ort = (p.get("ort") || "").trim().slice(0, 40);
+  if (ort) state.location = ort;
+  const kategorie = p.get("kategorie");
+  if (kategorie && KATEGORIEN.some(k => k.key === kategorie)) state.category = kategorie;
+  const umkreis = p.get("umkreis");
+  if (umkreis && ERLAUBT.umkreis.includes(umkreis)) state.radius = Number(umkreis);
+  const gaeste = p.get("gaeste");
+  if (gaeste && ERLAUBT.gaeste.includes(gaeste)) state.guests = Number(gaeste);
+}
+
+function schreibeUrlZustand() {
+  try {
+    const p = new URLSearchParams();
+    if (state.location.trim()) p.set("ort", state.location.trim());
+    p.set("kategorie", state.category);
+    p.set("umkreis", String(state.radius));
+    p.set("gaeste", String(state.guests));
+    window.history.replaceState(null, "", `${window.location.pathname}?${p.toString()}`);
+  } catch (fehler) { /* z. B. beim direkten Oeffnen ueber file:// */ }
+}
 
 /* ---------------------------------------------------------------
    Aufbau der Kategorie-Auswahl
@@ -189,7 +227,10 @@ function baueKategorien() {
       state.category = button.dataset.category;
       el("categoryFilter").value = state.category;
       el("heroCategory").value = state.category;
+      state.nurFavoriten = false;
+      el("favoritesButton").setAttribute("aria-pressed", "false");
       aktualisiere();
+      schreibeUrlZustand();
     });
   });
 }
@@ -198,6 +239,9 @@ function baueKategorien() {
    Filterlogik
 ----------------------------------------------------------------- */
 function gefilterteAnbieter() {
+  if (state.nurFavoriten) {
+    return providers.filter(p => state.favorites.has(p.id));
+  }
   return providers
     .filter(p => p.category === state.category)
     .filter(p => p.distance <= state.radius)
@@ -215,7 +259,7 @@ function gefilterteAnbieter() {
 function ortText(p) {
   const ort = state.location.trim();
   if (!ort) return `${p.distance} km entfernt`;
-  return p.distance <= 10 ? `${ort} · ${p.distance} km` : `Umkreis ${ort} · ${p.distance} km`;
+  return p.distance <= 10 ? `${sicher(ort)} · ${p.distance} km` : `Umkreis ${sicher(ort)} · ${p.distance} km`;
 }
 
 /* ---------------------------------------------------------------
@@ -226,12 +270,20 @@ function aktualisiere() {
   const treffer = gefilterteAnbieter();
   const kategorieLabel = state.category === "Location" ? "Locations" : state.category;
 
-  el("resultsTitle").textContent = ort
-    ? `${kategorieLabel} rund um ${ort}`
-    : `${kategorieLabel} in eurer Region`;
-  const personenText = state.guests === 0 ? "Gästezahl egal" : `ab ${state.guests} Personen`;
-  el("searchSummary").textContent =
-    `${treffer.length} ${treffer.length === 1 ? "Demo-Profil" : "Demo-Profile"} · ${state.radius} km · ${personenText}`;
+  const anzahlText = `${treffer.length} ${treffer.length === 1 ? "Demo-Profil" : "Demo-Profile"}`;
+  if (state.nurFavoriten) {
+    el("resultsTitle").textContent = "Eure Favoriten";
+    el("searchSummary").textContent = `${anzahlText} gemerkt · alle Kategorien`;
+  } else {
+    el("resultsTitle").textContent = ort
+      ? `${kategorieLabel} rund um ${ort}`
+      : `${kategorieLabel} in eurer Region`;
+    const personenText = state.guests === 0 ? "Gästezahl egal" : `ab ${state.guests} Personen`;
+    el("searchSummary").textContent = `${anzahlText} · ${state.radius} km · ${personenText}`;
+  }
+
+  el("categoryRail").querySelectorAll("[data-category]").forEach(b =>
+    b.setAttribute("aria-pressed", String(!state.nurFavoriten && b.dataset.category === state.category)));
 
   zeichneAktiveFilter();
   zeichneListe(treffer);
@@ -239,6 +291,12 @@ function aktualisiere() {
 
 function zeichneAktiveFilter() {
   const chips = [];
+  if (state.nurFavoriten) {
+    el("activeFilters").innerHTML = `<span class="active-filter"><b>Ansicht:</b> nur Favoriten
+      <button type="button" data-clear="favoriten" aria-label="Favoritenansicht verlassen">×</button></span>`;
+    el("activeFilters").querySelector("[data-clear]").addEventListener("click", () => setzeFavoritenAnsicht(false));
+    return;
+  }
   const ort = state.location.trim();
   if (ort) chips.push({ label: "Ort", wert: ort, key: "ort" });
   chips.push({ label: "Kategorie", wert: state.category, key: "kategorie" });
@@ -252,8 +310,8 @@ function zeichneAktiveFilter() {
   });
 
   el("activeFilters").innerHTML = chips.map(c => `
-    <span class="active-filter"><b>${c.label}:</b> ${c.wert}
-      ${c.key === "kategorie" ? "" : `<button type="button" data-clear="${c.key}" aria-label="${c.label} ${c.wert} entfernen">×</button>`}
+    <span class="active-filter"><b>${c.label}:</b> ${sicher(c.wert)}
+      ${c.key === "kategorie" ? "" : `<button type="button" data-clear="${c.key}" aria-label="${c.label} entfernen">×</button>`}
     </span>`).join("");
 
   el("activeFilters").querySelectorAll("[data-clear]").forEach(button => {
@@ -277,6 +335,17 @@ function entferneFilter(key) {
 }
 
 function zeichneListe(treffer) {
+  if (!treffer.length && state.nurFavoriten) {
+    providerList.innerHTML = `
+      <div class="empty-state">
+        <h3>Noch keine Favoriten gemerkt</h3>
+        <p>Tippt auf das Herz an einem Profil, dann sammelt ihr hier eure engere Auswahl.</p>
+        <button type="button" class="button button-outline" data-reset-inline>Zurück zur Suche</button>
+      </div>`;
+    bindeAktionen();
+    return;
+  }
+
   if (!treffer.length) {
     providerList.innerHTML = `
       <div class="empty-state">
@@ -339,7 +408,7 @@ function bindeAktionen() {
   providerList.querySelectorAll("[data-open-request]").forEach(b =>
     b.addEventListener("click", () => oeffneAnfrage(b.dataset.openRequest)));
   const reset = providerList.querySelector("[data-reset-inline]");
-  if (reset) reset.addEventListener("click", setzeFilterZurück);
+  if (reset) reset.addEventListener("click", setzeFilterZurueck);
 }
 
 function toggleFavorit(id) {
@@ -406,7 +475,7 @@ function oeffneAnfrage(ziel) {
   letzterFokus = document.activeElement;
   const anbieter = providers.find(p => p.id === ziel);
   const kopf = anbieter
-    ? { titel: `Anfrage an ${anbieter.name}`, text: "Drei Schritte: Eckdaten eintragen, prüfen, abschicken. In dieser Vorschau wird nichts versendet." }
+    ? { titel: `Anfrage an ${sicher(anbieter.name)}`, text: "Drei Schritte: Eckdaten eintragen, prüfen, abschicken. In dieser Vorschau wird nichts versendet." }
     : (ANFRAGE_TITEL[ziel] || ANFRAGE_TITEL.allgemein);
 
   el("requestContent").innerHTML = `
@@ -496,13 +565,13 @@ function pruefeUndSende(zielName) {
   el("requestContent").innerHTML = `
     <div class="request-confirm">
       <span class="confirm-flag">Demo-Bestätigung</span>
-      <h3>Danke, ${name}.</h3>
-      <p>So wäre die Anfrage an <b>${zielName}</b> herausgegangen. In dieser Vorschau wird nichts versendet und nichts gespeichert.</p>
+      <h3>Danke, ${sicher(name)}.</h3>
+      <p>So wäre die Anfrage an <b>${sicher(zielName)}</b> herausgegangen. In dieser Vorschau wird nichts versendet und nichts gespeichert.</p>
       <div class="confirm-summary">
         <span><b>Datum:</b> ${datumLesbar}</span>
-        <span><b>Ort:</b> ${ort}</span>
+        <span><b>Ort:</b> ${sicher(ort)}</span>
         <span><b>Gäste:</b> ${personenZahl}</span>
-        <span><b>Kontakt:</b> ${kontakt}</span>
+        <span><b>Kontakt:</b> ${sicher(kontakt)}</span>
       </div>
       <p>${weiterleitung
         ? "In der Vollversion geht die Anfrage direkt an das hinterlegte DEQO-Postfach."
@@ -537,7 +606,18 @@ function setzePreisAusgabe() {
   el("priceOutput").textContent = state.maxPrice >= 5000 ? "bis 5.000 €" : `bis ${PREIS(state.maxPrice)} €`;
 }
 
-function setzeFilterZurück() {
+function setzeFavoritenAnsicht(an) {
+  state.nurFavoriten = an;
+  el("favoritesButton").setAttribute("aria-pressed", String(an));
+  el("favoritesButton").setAttribute("aria-label", an ? "Favoritenansicht verlassen" : "Nur gespeicherte Favoriten anzeigen");
+  aktualisiere();
+  el("finden").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (an) zeigeHinweis(state.favorites.size ? "Eure gemerkten Profile." : "Noch keine Favoriten gemerkt.");
+}
+
+function setzeFilterZurueck() {
+  state.nurFavoriten = false;
+  el("favoritesButton").setAttribute("aria-pressed", "false");
   state.category = "Location";
   state.radius = 50;
   state.guests = 300;
@@ -563,6 +643,8 @@ function setzeFilterZurück() {
 function verbindeBedienung() {
   el("heroSearch").addEventListener("submit", event => {
     event.preventDefault();
+    state.nurFavoriten = false;
+    el("favoritesButton").setAttribute("aria-pressed", "false");
     state.location = el("heroLocation").value.trim();
     state.category = el("heroCategory").value;
     state.radius = Number(el("heroRadius").value);
@@ -572,6 +654,7 @@ function verbindeBedienung() {
     el("radiusFilter").value = String(state.radius);
     setzePersonenChips();
     aktualisiere();
+    schreibeUrlZustand();
     el("finden").scrollIntoView({ behavior: "smooth", block: "start" });
     zeigeHinweis(state.location ? `Ergebnisse für ${state.location} aktualisiert.` : "Ergebnisse aktualisiert.");
   });
@@ -586,12 +669,14 @@ function verbindeBedienung() {
     state.category = event.target.value;
     el("heroCategory").value = state.category;
     aktualisiere();
+    schreibeUrlZustand();
   });
 
   el("radiusFilter").addEventListener("change", event => {
     state.radius = Number(event.target.value);
     el("heroRadius").value = event.target.value;
     aktualisiere();
+    schreibeUrlZustand();
   });
 
   el("ratingFilter").addEventListener("change", event => {
@@ -627,13 +712,9 @@ function verbindeBedienung() {
     });
   });
 
-  el("resetFilters").addEventListener("click", setzeFilterZurück);
+  el("resetFilters").addEventListener("click", setzeFilterZurueck);
 
-  el("favoritesButton").addEventListener("click", () => {
-    zeigeHinweis(state.favorites.size
-      ? `${state.favorites.size} ${state.favorites.size === 1 ? "Favorit" : "Favoriten"} gespeichert.`
-      : "Noch keine Favoriten gespeichert.");
-  });
+  el("favoritesButton").addEventListener("click", () => setzeFavoritenAnsicht(!state.nurFavoriten));
 
   document.querySelectorAll("[data-open-request]").forEach(button => {
     button.addEventListener("click", () => oeffneAnfrage(button.dataset.openRequest));
@@ -717,10 +798,15 @@ function verbindeJourney() {
 /* ---------------------------------------------------------------
    Start
 ----------------------------------------------------------------- */
+leseUrlZustand();
 baueKategorien();
 verbindeBedienung();
 verbindeJourney();
+el("heroLocation").value = state.location;
 el("locationFilter").value = state.location;
+el("heroRadius").value = String(state.radius);
+el("radiusFilter").value = String(state.radius);
+el("heroGuests").value = String(state.guests);
 el("favoriteCount").textContent = state.favorites.size;
 setzePersonenChips();
 setzePreisAusgabe();

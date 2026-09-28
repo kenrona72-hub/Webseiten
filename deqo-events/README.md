@@ -32,6 +32,13 @@ python3 -m http.server 4173
 - Anfrage als validierter Demo-Dialog: Name, Eventdatum, Ort, Gästezahl, Kontakt. Abschluss klar als Demo-Bestätigung.
 - Anbieterbereich als eigener Funnel: Nutzen, Profilvorschau, danach erst Konzeptpreise.
 
+## Zusätzlich in dieser Fassung
+
+- **Favoritenansicht:** Das Herz im Kopfbereich schaltet auf die gemerkten Profile um, quer über alle Kategorien.
+- **Teilbarer Link:** Der Zustand steht in der URL, z. B. `index.html?ort=Ulm&kategorie=Fotografie&umkreis=75&gaeste=250`.
+  Damit lässt sich eine vorbereitete Ansicht verschicken. Werte aus der URL werden geprüft und maskiert.
+- **Linkvorschau und Favicon:** Open-Graph-Angaben, damit der Link in WhatsApp oder Mail ordentlich aussieht.
+
 ## Bewusst entfernt
 
 - **Sprachumschalter (DE/EN/TR/SQ):** zeigte nur einen Hinweis und versprach eine Funktion, die es nicht gibt.
@@ -67,8 +74,9 @@ Ebenfalls offen vor einer echten Veröffentlichung: Impressum, Datenschutzerklä
 
 ## Geprüft
 
-Automatisierter Browsertest (Chromium) auf 1440x900 und 390x844, 38 Prüfungen ohne Fehler:
+Automatisierter Browsertest (Chromium) auf 1440x900 und 390x844, 49 Prüfungen ohne Fehler:
 kein horizontaler Überlauf, Ortsübernahme in Überschrift und Ergebnissen, Kategorie- und Bewertungsfilter,
 entfernbare Filterchips, Favoritenzähler, Detaildialog, Anfrageformular mit Validierung und Demo-Bestätigung,
 Journey per Pfeil und Wischen, vertikales Scrollen bleibt frei, Tastaturfokus sichtbar, keine Konsolenfehler,
-`prefers-reduced-motion` ohne Animation.
+`prefers-reduced-motion` ohne Animation, Favoritenansicht, synchrone Kategorieleiste,
+Übernahme der Link-Parameter und keine Ausführung von eingeschleustem Code aus der URL.
